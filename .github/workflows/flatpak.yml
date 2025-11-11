@@ -5,6 +5,10 @@ on:
     - cron: "0 0 * * *"
   push:
     branches: [ main ]
+    paths:
+      - "**/*.yml"
+      - "**/*.yaml"
+      - ".github/workflows/flatpak.yml"
   workflow_dispatch:
 
 jobs:
