@@ -39,7 +39,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            "*.yml"
+            io.m51.Pass.SearchProvider.yml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-pages-artifact: true
