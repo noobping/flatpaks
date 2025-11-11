@@ -18,7 +18,18 @@ jobs:
       - run: flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - run: mkdir build-dir dist || true
       - run: cp *.flatpakrepo dist/
-      - run: for manifest in *.yml; do flatpak-builder --user --repo=dist --install-deps-from=flathub --ccache --force-clean build-dir "$manifest"; done
+      - name: build flatpaks
+        shell: bash
+        run: |
+          set -euxo pipefail
+          shopt -s nullglob
+          for manifest in *.json *.yml *.yaml; do 
+            flatpak-builder --user \
+              --ccache --force-clean \
+              --install-deps-from=flathub \
+              --repo=$(pwd)/dist \
+              build-dir "$manifest"
+            done
       - run: tree
 
       - uses: actions/configure-pages@v5
