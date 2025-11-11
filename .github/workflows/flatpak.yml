@@ -2,9 +2,9 @@ name: flatpak
 
 on:
   push:
-    branches: 
-    - main
-    - master
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -18,6 +18,12 @@ jobs:
       - run: flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - run: mkdir build-dir dist || true
       - run: cp *.flatpakrepo dist/
+      - name: Import GPG key
+        run: |
+          gpg --batch --import <<'EOF'
+          ${{ secrets.GPG_PRIVATE_KEY }}
+          EOF
+          gpg --batch --list-secret-keys
       - name: build flatpaks
         shell: bash
         run: |
@@ -31,7 +37,6 @@ jobs:
               build-dir "$manifest"
             done
       - run: tree
-
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
