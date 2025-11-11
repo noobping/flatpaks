@@ -9,6 +9,8 @@ on:
 
 jobs:
   build:
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +29,7 @@ jobs:
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
           gpg --batch --list-secret-keys
-      - name: build flatpaks
+      - name: apps
         shell: bash
         run: |
           set -euxo pipefail
@@ -39,7 +41,7 @@ jobs:
               --repo=dist \
               build-dir "$manifest"
             done
-      - name: build repo
+      - name: repo
         run: |
           flatpak build-update-repo \
             --generate-static-deltas \
