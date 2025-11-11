@@ -35,18 +35,11 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      # Generate a CNAME file on-the-fly for a configured host
-      - name: Generate CNAME
-        run: |
-          echo "flatter.andyholmes.ca" > CNAME
-
       - name: Build
         uses: andyholmes/flatter@main
         with:
           files: |
-            *.json
             *.yml
-            *.yaml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
