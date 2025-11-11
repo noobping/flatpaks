@@ -16,7 +16,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support
       - run: flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      - run: mkdir build-dir dist || true
+      - run: mkdir build-dir || true
+      - run: |
+          install -d dist
+          ostree --repo=dist init --mode=archive-z2
       - run: cp *.flatpakrepo dist/
       - name: Import GPG key
         run: |
