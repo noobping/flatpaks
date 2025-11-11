@@ -39,7 +39,7 @@ jobs:
               --repo=dist \
               build-dir "$manifest"
             done
-      - run: flatpak build-update-repo --generate-static-deltas --prune --prune-depth=20 --gpg-sign="${{ secrets.GPG_KEYID }}" dist
+      - run: flatpak build-update-repo --generate-static-deltas --prune --prune-depth=20 --gpg-sign="${{ secrets.GPG_KEY_ID }}" dist
       - run: tree
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
