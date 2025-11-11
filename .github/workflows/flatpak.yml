@@ -59,7 +59,7 @@ jobs:
           <meta name="description" content="${OWNER}'s personal flatpak repository">
           <meta name="keywords" content="flatpak, repo, apps, repository, applications">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <link rel="stylesheet" href="/style.css">
+          <link rel="stylesheet" href="https://${OWNER}.github.io/${REPO}/style.css">
           <title>${OWNER}'s Flatpak Repo</title>
           </head><body>
           <h1>${OWNER}'s Flatpak Repo</h1>
