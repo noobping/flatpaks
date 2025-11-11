@@ -2,7 +2,7 @@ name: Flatter
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 0 * *"
   workflow_dispatch:
 
 jobs:
@@ -10,9 +10,10 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/kde:5.15-22.08
+      image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
 
+    # See "Multiple Architectures" below
     strategy:
       matrix:
         arch: [x86_64, aarch64]
@@ -21,29 +22,31 @@ jobs:
       max-parallel: 1
 
     steps:
-      - uses: actions/checkout@v4
-
-      # See "Multiple Architectures" below
-      - name: Setup QEMU
-        if: ${{ matrix.arch == 'aarch64' }}
-        id: qemu
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm64
+      # Checkout a repository with Flatpak manifests
+      - name: Checkout
+        uses: actions/checkout@v4
 
       # See "GPG Signing" below
       - name: Setup GPG
+        if: ${{ github.triggering_actor == github.repository_owner }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      # Generate a CNAME file on-the-fly for a configured host
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
       - name: Build
         uses: andyholmes/flatter@main
         with:
           files: |
+            *.json
             *.yml
+            *.yaml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
@@ -64,4 +67,4 @@ jobs:
     steps:
       - name: GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
