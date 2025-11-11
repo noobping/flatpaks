@@ -37,11 +37,6 @@ jobs:
         run: |
           flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      - name: Prepare dirs
-        run: |
-          rm -rf "$BUILD_DIR" "$REPO_DIR"
-          mkdir -p "$BUILD_DIR" "$REPO_DIR"
-
       - name: Build all manifests (${{ matrix.arch }})
         env:
           ARCH: ${{ matrix.arch }}
