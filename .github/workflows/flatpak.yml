@@ -35,6 +35,7 @@ jobs:
           EOF
           gpg --batch --list-secret-keys
           gpg --armor --export "${{ secrets.GPG_KEY_ID }}" > pubkey.asc
+          cp .github/style.css dist/style.css
       - name: meta
         env:
           OWNER: ${{ github.repository_owner }}
@@ -45,7 +46,7 @@ jobs:
           cat > dist/${REPO}.flatpakrepo <<EOF
           [Flatpak Repo]
           Title=${REPO}
-          Description=${OWNER}'s personal flatpak repository 
+          Description=${OWNER}'s personal flatpak repository
           Url=${BASE_URL}
           GPGKey=
           EOF
@@ -53,13 +54,20 @@ jobs:
           awk 'BEGIN {f=0} /BEGIN PGP PUBLIC KEY BLOCK/ {f=1; next} /END PGP PUBLIC KEY BLOCK/ {f=0} f' pubkey.asc | base64 -w0 >> dist/${REPO}.flatpakrepo
 
           cat > dist/index.html <<HTML
-          <!doctype html><meta charset="utf-8">
+          <!doctype html><html lang="en"><head><meta charset="utf-8">
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+          <meta name="author" content="${OWNER}">
+          <meta name="description" content="${OWNER}'s personal flatpak repository">
+          <meta name="keywords" content="flatpak, repo, apps, repository, applications">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link rel="stylesheet" href="/style.css">
           <title>${OWNER}'s Flatpak Repo</title>
+          </head><body>
           <h1>${OWNER}'s Flatpak Repo</h1>
           <p>Add this repo:</p>
           <pre>flatpak remote-add --if-not-exists ${REPO} ${BASE_URL}/${REPO}.flatpakrepo</pre>
           <p>Then install your apps, e.g.:</p>
-          <pre>flatpak install ${REPO} your.app.ID</pre>
+          <pre>flatpak install ${REPO} your.app.ID</pre></body></html>
           HTML
       - name: apps
         shell: bash
@@ -80,7 +88,6 @@ jobs:
             --prune --prune-depth=20 \
             --gpg-sign="${{ secrets.GPG_KEY_ID }}" \
             dist
-      - run: tree
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
