@@ -38,12 +38,12 @@ jobs:
       - name: Build
         uses: andyholmes/flatter@main
         with:
-          files: .
+          files: |
+            "*.yml"
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
-          upload-bundles: true
+          upload-pages-artifact: true
 
-  # See "Github Pages" below
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
