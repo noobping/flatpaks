@@ -30,20 +30,23 @@ jobs:
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
           gpg --batch --list-secret-keys
+          gpg --armor --export "${{ secrets.GPG_KEY_ID }}" > pubkey.asc
       - name: meta
         env:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
         run: |
           set -euxo pipefail
-          BASE_URL="https://${OWNER}.github.io/${REPO}/repo"
+          BASE_URL="https://${OWNER}.github.io/${REPO}"
           cat > dist/${REPO}.flatpakrepo <<EOF
           [Flatpak Repo]
           Title=${REPO}
           Description=${OWNER}'s personal flatpak repository 
           Url=${BASE_URL}
-          gpg-verify=false
+          GPGKey=
           EOF
+
+          awk 'BEGIN {f=0} /BEGIN PGP PUBLIC KEY BLOCK/ {f=1; next} /END PGP PUBLIC KEY BLOCK/ {f=0} f' pubkey.asc | base64 -w0 >> dist/${REPO}.flatpakrepo
 
           cat > dist/index.html <<HTML
           <!doctype html><meta charset="utf-8">
