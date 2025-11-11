@@ -55,7 +55,6 @@ jobs:
 
           cat > dist/index.html <<HTML
           <!doctype html><html lang="en"><head><meta charset="utf-8">
-          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
           <meta name="author" content="${OWNER}">
           <meta name="description" content="${OWNER}'s personal flatpak repository">
           <meta name="keywords" content="flatpak, repo, apps, repository, applications">
