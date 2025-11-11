@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -25,11 +26,34 @@ jobs:
           mkdir build-dir || true
           install -d dist
           ostree --repo=dist init --mode=archive-z2
-          cp *.flatpakrepo dist/
           gpg --batch --import <<'EOF'
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
           gpg --batch --list-secret-keys
+      - name: meta
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          set -euxo pipefail
+          BASE_URL="https://${OWNER}.github.io/${REPO}/repo"
+          cat > dist/${REPO}.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=${REPO}
+          Description=${OWNER}'s personal flatpak repository 
+          Url=${BASE_URL}
+          gpg-verify=false
+          EOF
+
+          cat > dist/index.html <<HTML
+          <!doctype html><meta charset="utf-8">
+          <title>${OWNER}'s Flatpak Repo</title>
+          <h1>${OWNER}'s Flatpak Repo</h1>
+          <p>Add this repo:</p>
+          <pre>flatpak remote-add --if-not-exists ${REPO} ${BASE_URL}/${REPO}.flatpakrepo</pre>
+          <p>Then install your apps, e.g.:</p>
+          <pre>flatpak install ${REPO} your.app.ID</pre>
+          HTML
       - name: apps
         shell: bash
         run: |
