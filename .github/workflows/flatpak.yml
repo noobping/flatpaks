@@ -73,13 +73,16 @@ jobs:
         run: |
           set -euxo pipefail
           shopt -s nullglob
-          for manifest in *.json *.yml *.yaml; do 
-            flatpak-builder --user \
-              --ccache --force-clean \
-              --install-deps-from=flathub \
-              --repo=dist \
-              build-dir "$manifest"
+          for arch in x86_64 aarch64; do
+            for manifest in *.json *.yml *.yaml; do 
+              flatpak-builder --user \
+                --ccache --force-clean \
+                --install-deps-from=flathub \
+                --arch="${arch}" \
+                --repo=dist \
+                build-dir "$manifest"
             done
+          done
       - name: repo
         run: |
           flatpak build-update-repo \
