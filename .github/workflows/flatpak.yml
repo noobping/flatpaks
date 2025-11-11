@@ -36,7 +36,7 @@ jobs:
             flatpak-builder --user \
               --ccache --force-clean \
               --install-deps-from=flathub \
-              --repo=$(pwd)/dist \
+              --repo=dist \
               build-dir "$manifest"
             done
       - run: flatpak build-update-repo --generate-static-deltas --prune --prune-depth=20 --gpg-sign="${{ secrets.GPG_KEYID }}" dist
