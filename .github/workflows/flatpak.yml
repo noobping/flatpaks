@@ -2,7 +2,7 @@ name: Flatter
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 0 * *"
   workflow_dispatch:
 
 jobs:
@@ -21,9 +21,7 @@ jobs:
       max-parallel: 1
 
     steps:
-      # Checkout a repository with Flatpak manifests
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # See "Multiple Architectures" below
       - name: Setup QEMU
@@ -41,34 +39,15 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      # Generate a CNAME file on-the-fly for a configured host
-      - name: Generate CNAME
-        run: |
-          echo "flatpak.timschneeberger.me" > CNAME
-
-      - name: Install runtimes (aarch64)
-        if: ${{ matrix.arch == 'aarch64' }}
-        run: |
-          flatpak install --noninteractive org.kde.Sdk/aarch64/6.6
-          flatpak install --noninteractive org.kde.Platform/aarch64/6.6
-
-      - name: Install runtimes (x86_64)
-        if: ${{ matrix.arch == 'x86_64' }}
-        run: |
-          flatpak install --noninteractive org.kde.Sdk/x86_64/6.6
-          flatpak install --noninteractive org.kde.Platform/x86_64/6.6
-
       - name: Build
         uses: andyholmes/flatter@main
         with:
           files: |
-            me.timschneeberger.jdsp4linux.pulse.yaml
+            *.yml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
           upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
-          upload-pages-includes: |
-            CNAME
 
   # See "Github Pages" below
   deploy:
