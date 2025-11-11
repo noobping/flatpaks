@@ -74,14 +74,16 @@ jobs:
         run: |
           set -euxo pipefail
           shopt -s nullglob
+
           mkdir -p .locks
+
           build_one() {
             local arch="$1" manifest="$2"
             local base name builddir tmprepo
             base="$(basename "$manifest")"
             name="${base%.*}"
             builddir="build-${arch}-${name}"
-            tmprepo="$(mktemp -p . -d "repo-${arch}-${name}-XXXX")
+            tmprepo=$(mktemp -p . -d "repo-${arch}-${name}-XXXX")
 
             flatpak-builder --user \
               --ccache --force-clean \
@@ -97,10 +99,11 @@ jobs:
 
             rm -rf "${tmprepo}" "${builddir}"
           }
+
           export -f build_one
 
           parallel --halt soon,fail=1 -j"${JOBS:-$(nproc)}" \
-            build_one ::: x86_64 aarch64 ::: *.json *.yml *.yaml  
+            build_one ::: x86_64 aarch64 ::: *.json *.yml *.yaml
       - name: repo
         run: |
           flatpak build-update-repo \
