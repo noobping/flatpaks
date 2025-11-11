@@ -1,0 +1,57 @@
+app-id: io.m51.Pass.SearchProvider
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.llvm18
+command: ripasso-gnome-search-provider
+
+finish-args:
+  - --own-name=io.m51.Pass.SearchProvider
+  - --filesystem=home/.password-store:ro
+  - --filesystem=home/.gnupg:ro
+  - --filesystem=xdg-run/gnupg
+
+build-options:
+  build-args:
+    - --share=network
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm18/bin
+  env:
+    CARGO_HOME: /run/build/ripasso-gnome-search-provider/cargo
+    RUSTFLAGS: "-C debuginfo=0"
+    LIBCLANG_PATH: "/usr/lib/sdk/llvm18/lib"
+    BINDGEN_EXTRA_CLANG_ARGS: >
+      -I/usr/lib/sdk/llvm18/lib/clang/18/include
+      -idirafter/usr/include
+      --sysroot=/
+    PKG_CONFIG_PATH: "/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/app/lib/pkgconfig"
+    PKG_CONFIG_SYSROOT_DIR: "/"
+
+modules:
+  - name: ripasso-gnome-search-provider
+    buildsystem: simple
+    sources:
+      - type: git
+        url: https://github.com/Fingel/ripasso-gnome-search-provider.git
+        tag: v1.2.1
+        disable-shallow-clone: true
+    build-commands:
+      - which cargo && cargo --version
+      - which clang && clang --version || true
+      - echo "CARGO_HOME=$CARGO_HOME"
+      - cargo fetch --locked
+      - cargo build --release --frozen
+      - install -D -m755 target/release/ripasso-gnome-search-provider /app/bin/ripasso-gnome-search-provider
+      - sed -i 's#/usr/lib/ripasso-gnome-search-provider/ripasso-gnome-search-provider#/app/bin/ripasso-gnome-search-provider#g' conf/io.m51.Pass.SearchProvider.service.dbus || true
+      - sed -i 's#/usr/lib/ripasso-gnome-search-provider/ripasso-gnome-search-provider#/app/bin/ripasso-gnome-search-provider#g' conf/io.m51.Pass.SearchProvider.service.systemd || true
+      - install -D -m644 conf/io.m51.Pass.search-provider.ini /app/share/gnome-shell/search-providers/io.m51.Pass.search-provider.ini
+      - install -D -m644 conf/io.m51.Pass.SearchProvider.desktop /app/share/applications/io.m51.Pass.SearchProvider.desktop
+      - install -D -m644 conf/io.m51.Pass.SearchProvider.service.dbus /app/share/dbus-1/services/io.m51.Pass.SearchProvider.service
+      - install -D -m644 conf/io.m51.Pass.SearchProvider.service.systemd /app/lib/systemd/user/io.m51.Pass.SearchProvider.service
+    cleanup:
+      - "/lib/systemd"
+      - "/lib/*.la"
+      - "/include"
+      - "/share/doc"
+      - "/share/man"
