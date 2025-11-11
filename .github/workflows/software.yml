@@ -1,0 +1,137 @@
+name: Software
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**/*.yml"
+      - "**/*.yaml"
+      - ".github/workflows/software.yml"
+  schedule:
+    - cron: "0 0 0 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flatpak toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support
+
+      - name: Add Flathub (user scope)
+        run: |
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Prepare dirs
+        run: |
+          rm -rf "$BUILD_DIR" "$REPO_DIR"
+          mkdir -p "$BUILD_DIR" "$REPO_DIR"
+
+      - name: Build all manifests (${{ matrix.arch }})
+        env:
+          ARCH: ${{ matrix.arch }}
+          RUNTIME_BRANCH: ${{ env.RUNTIME_BRANCH }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          MANIFESTS=( **/*.yml **/*.yaml )
+          if [ ${#MANIFESTS[@]} -eq 0 ]; then
+            echo "No manifests found (*.yml / *.yaml)"; exit 1
+          fi
+
+          # Pre-install common SDKs/Extensions on demand (safe if already present)
+          # Add more lines if some manifests need extras (e.g., llvm18)
+          flatpak --user install -y --noninteractive flathub \
+            org.freedesktop.Platform//$RUNTIME_BRANCH \
+            org.freedesktop.Sdk//$RUNTIME_BRANCH \
+            org.freedesktop.Sdk.Extension.rust-stable//$RUNTIME_BRANCH || true
+
+          for mf in "${MANIFESTS[@]}"; do
+            echo "::group::Building $mf for $ARCH"
+            flatpak-builder --user --force-clean \
+              --arch="$ARCH" \
+              --install-deps-from=flathub \
+              --repo="$REPO_DIR" \
+              "$BUILD_DIR" \
+              "$mf"
+            echo "::endgroup::"
+          done
+
+      - name: Import GPG & sign repo
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.gnupg"; chmod 700 "$HOME/.gnupg"
+          printf "%s" "$GPG_PRIVATE_KEY" | gpg --batch --import
+          flatpak build-update-repo --generate-static-deltas --gpg-sign="$GPG_KEY_ID" "$REPO_DIR"
+
+      - name: Generate .flatpakrepo
+        run: |
+          set -euo pipefail
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
+          cat > noobping.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=noobping's flatpak repo
+          Description=noobping's personal flatpak repository
+          Url=${BASE_URL}/repo
+          Homepage=https://github.com/${OWNER}/${REPO_NAME}
+          Icon=https://avatars.githubusercontent.com/u/6437449
+          GPGKey=$(awk 'BEGIN{f=0}/BEGIN PGP PUBLIC KEY BLOCK/{f=1;next}/END PGP PUBLIC KEY BLOCK/{f=0}f' "$REPO_DIR/flatpak-repo-public.gpg" | base64 -w0)
+          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          EOF
+
+      - name: Add CNAME (optional)
+        if: ${{ vars.PAGES_CNAME != '' }}
+        run: echo "${{ vars.PAGES_CNAME }}" > CNAME
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p public
+          mv "$REPO_DIR" public/repo
+          mv noobping.flatpakrepo public/
+          if [ -f CNAME ]; then mv CNAME public/; fi
+          cat > public/index.html <<'EOF'
+          <!doctype html><meta charset="utf-8">
+          <title>noobping Flatpak Repo</title>
+          <h1>noobping Flatpak Repo</h1>
+          <p><a href="noobping.flatpakrepo">Add this repo (.flatpakrepo)</a></p>
+          <p>OSTree repo: <a href="repo/">repo/</a></p>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: build-and-publish
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
