@@ -48,8 +48,7 @@ jobs:
           Title=${REPO}
           Description=${OWNER}'s personal flatpak repository
           Url=${BASE_URL}
-          GPGKey=
-          EOF
+          GPGKey=EOF
 
           awk 'BEGIN {f=0} /BEGIN PGP PUBLIC KEY BLOCK/ {f=1; next} /END PGP PUBLIC KEY BLOCK/ {f=0} f' pubkey.asc | base64 -w0 >> dist/${REPO}.flatpakrepo
 
