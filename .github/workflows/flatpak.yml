@@ -25,7 +25,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support parallel
       - name: prep
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
         run: |
+          set -euxo pipefail
           flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           mkdir build-dir || true
           install -d dist
@@ -34,12 +38,7 @@ jobs:
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
           cp .github/style.css dist/style.css
-      - name: meta
-        env:
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
-        run: |
-          set -euxo pipefail
+          
           BASE_URL="https://${OWNER}.github.io/${REPO}"
           GPG_BASE64=$(gpg --export "${{ secrets.GPG_KEY_ID }}" | base64 -w0)
           cat > dist/${REPO}.flatpakrepo <<EOF
@@ -102,6 +101,10 @@ jobs:
             build_one ::: x86_64 aarch64 ::: *.json *.yml *.yaml
       - name: repo
         run: |
+          set -euxo pipefail
+          gpg --batch --import <<'EOF'
+          ${{ secrets.GPG_PRIVATE_KEY }}
+          EOF
           flatpak build-update-repo \
             --generate-static-deltas \
             --prune --prune-depth=20 \
