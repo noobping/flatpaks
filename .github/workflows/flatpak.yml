@@ -33,8 +33,6 @@ jobs:
           gpg --batch --import <<'EOF'
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
-          gpg --batch --list-secret-keys
-          gpg --armor --export "${{ secrets.GPG_KEY_ID }}" > pubkey.asc
           cp .github/style.css dist/style.css
       - name: meta
         env:
@@ -43,16 +41,14 @@ jobs:
         run: |
           set -euxo pipefail
           BASE_URL="https://${OWNER}.github.io/${REPO}"
+          GPG_BASE64=$(gpg --export "${GPG_KEY_ID}" | base64 -w0)
           cat > dist/${REPO}.flatpakrepo <<EOF
           [Flatpak Repo]
           Title=${REPO}
           Description=${OWNER}'s personal flatpak repository
           Url=${BASE_URL}
-          GPGKey=
+          GPGKey=${GPG_BASE64}
           EOF
-
-          GPG_BASE64=$(awk 'BEGIN {f=0} /BEGIN PGP PUBLIC KEY BLOCK/ {f=1; next} /END PGP PUBLIC KEY BLOCK/ {f=0} f' pubkey.asc | base64 -w0)
-          sed -i "s|^GPGKey=.*|GPGKey=${GPG_BASE64}|" "dist/${REPO}.flatpakrepo"
 
           cat > dist/index.html <<HTML
           <!doctype html><html lang="en"><head><meta charset="utf-8">
