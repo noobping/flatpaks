@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euxo pipefail
           BASE_URL="https://${OWNER}.github.io/${REPO}"
-          GPG_BASE64=$(gpg --export "${GPG_KEY_ID}" | base64 -w0)
+          GPG_BASE64=$(gpg --export "${{ secrets.GPG_KEY_ID }}" | base64 -w0)
           cat > dist/${REPO}.flatpakrepo <<EOF
           [Flatpak Repo]
           Title=${REPO}
