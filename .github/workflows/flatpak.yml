@@ -102,9 +102,7 @@ jobs:
       - name: repo
         run: |
           set -euxo pipefail
-          gpg --batch --import <<'EOF'
-          ${{ secrets.GPG_PRIVATE_KEY }}
-          EOF
+          ostree --repo=dist summary -u
           flatpak build-update-repo \
             --generate-static-deltas \
             --prune --prune-depth=20 \
