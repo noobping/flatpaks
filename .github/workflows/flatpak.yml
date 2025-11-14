@@ -99,15 +99,8 @@ jobs:
 
           parallel --halt soon,fail=1 -j"${JOBS:-$(nproc)}" \
             build_one ::: x86_64 aarch64 ::: *.json *.yml *.yaml
-      - name: repo
-        run: |
-          set -euxo pipefail
-          ostree --repo=dist summary -u
-          flatpak build-update-repo \
-            --generate-static-deltas \
-            --prune --prune-depth=20 \
-            --gpg-sign="${{ secrets.GPG_KEY_ID }}" \
-            dist
+      - run: ostree --repo=dist summary -u
+      - run: flatpak build-update-repo --generate-static-deltas --prune --prune-depth=20 --gpg-sign="${{ secrets.GPG_KEY_ID }}" dist
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
