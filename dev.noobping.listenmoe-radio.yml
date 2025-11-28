@@ -18,6 +18,8 @@ modules:
     buildsystem: simple
 
     build-options:
+      build-args:
+      - --share=network
       append-path: /usr/lib/sdk/rust-stable/bin
       env:
         CARGO_HOME: /run/build/listenmoe-radio/cargo
