@@ -27,7 +27,7 @@ modules:
     build-commands:
       - cargo build --release
       - install -Dm0755 target/release/listenmoe-radio /app/bin/listenmoe-radio
-      - install -Dm0644 icons/listenmoe.png /app/share/icons/listenmoe.png
+      - install -Dm0644 icons/listenmoe.png /app/share/icons/hicolor/64x64/apps/dev.noobping.listenmoe-radio.png
       - install -Dm0644 listenmoe-radio.desktop /app/share/applications/dev.noobping.listenmoe-radio.desktop
 
     sources:
