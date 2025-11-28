@@ -10,7 +10,7 @@ command: listenmoe-radio
 
 finish-args:
   - --share=network
-  - --socket=pipewire-0
+  - --socket=pulseaudio
   - --socket=wayland
 
 modules:
