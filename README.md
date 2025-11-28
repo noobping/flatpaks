@@ -10,3 +10,9 @@ Add this repo:
 ```sh
 flatpak remote-add --if-not-exists flatpaks https://noobping.github.io/flatpaks/flatpaks.flatpakrepo
 ```
+
+Local build:
+
+```sh
+flatpak-builder --user --install --force-clean flatpak-build dev.noobping.listenmoe-radio.yml
+```
