@@ -127,13 +127,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak ostree gpg
 
-      - name: debug gpg keys
-        run: |
-          set -euxo pipefail
-          gpg --list-secret-keys
-          gpg --list-keys
-          gpg --list-secret-keys "${{ secrets.GPG_KEY_ID }}" || echo "Key not found"
-
       - name: prepare dist
         env:
           OWNER: ${{ github.repository_owner }}
@@ -174,6 +167,13 @@ jobs:
           <p>Then install your apps, e.g.:</p>
           <pre>flatpak install ${REPO} your.app.ID</pre></body></html>
           HTML
+
+      - name: debug gpg keys
+        run: |
+          set -euxo pipefail
+          gpg --list-secret-keys
+          gpg --list-keys
+          gpg --list-secret-keys "${{ secrets.GPG_KEY_ID }}" || echo "Key not found"
 
       - name: download all repo fragments
         uses: actions/download-artifact@v4
