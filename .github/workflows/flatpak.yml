@@ -28,27 +28,27 @@ jobs:
           set -euxo pipefail
           shopt -s nullglob
 
-          # Find manifests
           manifests=( *.json *.yml *.yaml )
           if [ ${#manifests[@]} -eq 0 ]; then
             echo "No manifests found" >&2
-            # empty matrix, avoids errors
             echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Build JSON: list of {app, arch}
           archs=( "x86_64" "aarch64" )
 
-          # Build via jq
-          jq -n --argjson apps "$(printf '%s\n' "${manifests[@]}" | jq -R -s -c 'split("\n")[:-1]')" \
-                --argjson archs "$(printf '%s\n' "${archs[@]}" | jq -R -s -c 'split("\n")[:-1]')" \
+          apps_json=$(printf '%s\n' "${manifests[@]}" | jq -R -s -c 'split("\n")[:-1]')
+          archs_json=$(printf '%s\n' "${archs[@]}" | jq -R -s -c 'split("\n")[:-1]')
+
+          jq -n \
+            --argjson apps "$apps_json" \
+            --argjson archs "$archs_json" \
             '
             {
               include: [
-                .apps[] as $app |
-                .archs[] as $arch |
-                { app: $app, arch: $arch }
+                ($apps[] as $app |
+                 $archs[] as $arch |
+                 { app: $app, arch: $arch })
               ]
             }' > matrix.json
 
