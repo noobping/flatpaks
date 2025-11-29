@@ -72,7 +72,7 @@ jobs:
       - name: install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support
+          sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support gpg
 
       - name: prepare base (per job)
         env:
@@ -97,6 +97,10 @@ jobs:
 
           mkdir "$tmprepo"
 
+          gpg --batch --import <<'EOF'
+          ${{ secrets.GPG_PRIVATE_KEY }}
+          EOF
+
           flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
           flatpak-builder --user \
@@ -104,6 +108,7 @@ jobs:
             --install-deps-from=flathub \
             --arch="${ARCH}" \
             --repo="${tmprepo}" \
+            --gpg-sign="${{ secrets.GPG_KEY_ID }}" \
             "${builddir}" "${APP}"
 
           # pack repo fragment as artifact
