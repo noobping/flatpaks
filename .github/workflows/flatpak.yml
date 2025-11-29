@@ -40,19 +40,21 @@ jobs:
           apps_json=$(printf '%s\n' "${manifests[@]}" | jq -R -s -c 'split("\n")[:-1]')
           archs_json=$(printf '%s\n' "${archs[@]}" | jq -R -s -c 'split("\n")[:-1]')
 
-          jq -n \
-            --argjson apps "$apps_json" \
-            --argjson archs "$archs_json" \
-            '
-            {
-              include: [
-                ($apps[] as $app |
-                 $archs[] as $arch |
-                 { app: $app, arch: $arch })
-              ]
-            }' > matrix.json
+          matrix_json=$(
+            jq -c -n \
+              --argjson apps "$apps_json" \
+              --argjson archs "$archs_json" \
+              '
+              {
+                include: [
+                  ($apps[] as $app |
+                   $archs[] as $arch |
+                   { app: $app, arch: $arch })
+                ]
+              }'
+          )
 
-          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
 
   build:
     needs: discover
