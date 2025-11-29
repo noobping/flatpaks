@@ -2,9 +2,7 @@ name: flatpak
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -17,28 +15,132 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      - run: |
+
+      - id: set-matrix
+        shell: bash
+        run: |
+          set -euxo pipefail
+          shopt -s nullglob
+
+          manifests=( *.json *.yml *.yaml )
+          if [ ${#manifests[@]} -eq 0 ]; then
+            echo "No manifests found" >&2
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          archs=( "x86_64" "aarch64" )
+
+          apps_json=$(printf '%s\n' "${manifests[@]}" | jq -R -s -c 'split("\n")[:-1]')
+          archs_json=$(printf '%s\n' "${archs[@]}" | jq -R -s -c 'split("\n")[:-1]')
+
+          matrix_json=$(
+            jq -c -n \
+              --argjson apps "$apps_json" \
+              --argjson archs "$archs_json" \
+              '
+              {
+                include: [
+                  ($apps[] as $app |
+                   $archs[] as $arch |
+                   { app: $app, arch: $arch })
+                ]
+              }'
+          )
+
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: discover
+    if: ${{ fromJson(needs.discover.outputs.matrix).include != '' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install deps
+        run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support parallel
-      - name: prep
+          sudo apt-get install -y flatpak flatpak-builder ostree bubblewrap qemu-user-static binfmt-support
+
+      - name: prepare base (per job)
         env:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
         run: |
           set -euxo pipefail
-          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          mkdir build-dir || true
-          install -d dist
+          mkdir dist
           ostree --repo=dist init --mode=archive-z2
+
+      - name: build app
+        shell: bash
+        env:
+          APP: ${{ matrix.app }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euxo pipefail
+          base="$(basename "$APP")"
+          name="${base%.*}"
+          builddir="build-${ARCH}-${name}"
+          tmprepo="repo-${ARCH}-${name}"
+
+          mkdir "$tmprepo"
+
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+          flatpak-builder --user \
+            --ccache --force-clean \
+            --install-deps-from=flathub \
+            --arch="${ARCH}" \
+            --repo="${tmprepo}" \
+            "${builddir}" "${APP}"
+
+          # pack repo fragment as artifact
+          tar czf "repo-${ARCH}-${name}.tar.gz" "${tmprepo}"
+
+      - name: upload repo fragment
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-${{ matrix.arch }}-${{ matrix.app }}
+          path: repo-${{ matrix.arch }}-*.tar.gz
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak ostree gpg
+
+      - name: prepare dist
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          set -euxo pipefail
+          mkdir -p dist
+          ostree --repo=dist init --mode=archive-z2
+
           gpg --batch --import <<'EOF'
           ${{ secrets.GPG_PRIVATE_KEY }}
           EOF
+
           cp .github/style.css dist/style.css
-          
+
           BASE_URL="https://${OWNER}.github.io/${REPO}"
           GPG_BASE64=$(gpg --export "${{ secrets.GPG_KEY_ID }}" | base64 -w0)
           cat > dist/${REPO}.flatpakrepo <<EOF
@@ -55,7 +157,7 @@ jobs:
           <meta name="description" content="${OWNER}'s personal flatpak repository">
           <meta name="keywords" content="flatpak, repo, apps, repository, applications">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <link rel="stylesheet" href="https://${OWNER}.github.io/${REPO}/style.css">
+          <link rel="stylesheet" href="${BASE_URL}/style.css">
           <title>${OWNER}'s Flatpak Repo</title>
           </head><body>
           <h1>${OWNER}'s Flatpak Repo</h1>
@@ -64,43 +166,34 @@ jobs:
           <p>Then install your apps, e.g.:</p>
           <pre>flatpak install ${REPO} your.app.ID</pre></body></html>
           HTML
-      - name: apps
-        shell: bash
+
+      - name: download all repo fragments
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: merge repos
         run: |
           set -euxo pipefail
-          shopt -s nullglob
+          find artifacts -name 'repo-*.tar.gz' -print0 | while IFS= read -r -d '' tarball; do
+            tmpdir=$(mktemp -d)
+            tar xzf "$tarball" -C "$tmpdir"
+            repo_path="$(find "$tmpdir" -maxdepth 1 -type d -name 'repo-*' | head -n1)"
+            echo "Merging $repo_path"
+            ostree --repo=dist pull-local "$repo_path"
+            rm -rf "$tmpdir"
+          done
 
-          mkdir -p .locks
+          ostree --repo=dist summary -u
 
-          build_one() {
-            local arch="$1" manifest="$2"
-            local base name builddir tmprepo
-            base="$(basename "$manifest")"
-            name="${base%.*}"
-            builddir="build-${arch}-${name}"
-            tmprepo=$(mktemp -p . -d "repo-${arch}-${name}-XXXX")
+      - name: finalize flatpak repo
+        run: |
+          flatpak build-update-repo \
+            --generate-static-deltas \
+            --prune --prune-depth=20 \
+            --gpg-sign="${{ secrets.GPG_KEY_ID }}" \
+            dist
 
-            flatpak-builder --user \
-              --ccache --force-clean \
-              --install-deps-from=flathub \
-              --arch="${arch}" \
-              --repo="${tmprepo}" \
-              "${builddir}" "${manifest}"
-
-            exec 9> .locks/dist.lock
-            flock 9
-            ostree --repo=dist pull-local "${tmprepo}"
-            flock -u 9
-
-            rm -rf "${tmprepo}" "${builddir}"
-          }
-
-          export -f build_one
-
-          parallel --halt soon,fail=1 -j"${JOBS:-$(nproc)}" \
-            build_one ::: x86_64 aarch64 ::: *.json *.yml *.yaml
-      - run: ostree --repo=dist summary -u
-      - run: flatpak build-update-repo --generate-static-deltas --prune --prune-depth=20 --gpg-sign="${{ secrets.GPG_KEY_ID }}" dist
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
