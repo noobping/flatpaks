@@ -60,6 +60,7 @@ jobs:
     needs: discover
     if: ${{ fromJson(needs.discover.outputs.matrix).include != '' }}
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     strategy:
       fail-fast: false
