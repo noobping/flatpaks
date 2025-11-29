@@ -1,4 +1,4 @@
-id: dev.noobping.listenmoe-radio
+id: dev.noobping.listenmoe
 runtime: org.gnome.Platform
 runtime-version: '49'
 sdk: org.gnome.Sdk
@@ -6,7 +6,7 @@ sdk: org.gnome.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 
-command: listenmoe-radio
+command: listenmoe
 
 finish-args:
   - --share=network
@@ -14,7 +14,7 @@ finish-args:
   - --socket=wayland
 
 modules:
-  - name: listenmoe-radio
+  - name: listenmoe
     buildsystem: simple
 
     build-options:
@@ -22,13 +22,13 @@ modules:
       - --share=network
       append-path: /usr/lib/sdk/rust-stable/bin
       env:
-        CARGO_HOME: /run/build/listenmoe-radio/cargo
+        CARGO_HOME: /run/build/listenmoe/cargo
 
     build-commands:
       - cargo build --release
-      - install -Dm0755 target/release/listenmoe-radio /app/bin/listenmoe-radio
-      - install -Dm0644 icons/listenmoe.png /app/share/icons/hicolor/64x64/apps/dev.noobping.listenmoe-radio.png
-      - install -Dm0644 listenmoe-radio.desktop /app/share/applications/dev.noobping.listenmoe-radio.desktop
+      - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
+      - install -Dm0644 data/scalable/apps/dev.noobping.listenmoe.svg /app/share/icons/hicolor/scalable/apps/dev.noobping.listenmoe.svg
+      - install -Dm0644 listenmoe.desktop /app/share/applications/dev.noobping.listenmoe.desktop
 
     sources:
       - type: git
