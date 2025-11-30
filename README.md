@@ -1,4 +1,4 @@
-[![flatpak](https://github.com/noobping/flatpaks/actions/workflows/flatpak.yml/badge.svg)](https://github.com/noobping/flatpaks/actions/workflows/flatpak.yml)
+[![flatpak](https://github.com/noobping/flatpaks/actions/workflows/flatpak.yml/badge.svg?branch=main)](https://github.com/noobping/flatpaks/actions/workflows/flatpak.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-default.svg)](https://opensource.org/licenses/MIT)
 
 # Flatpaks
