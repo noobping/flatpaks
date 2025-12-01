@@ -28,7 +28,8 @@ modules:
       - cargo build --release
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/dev.noobping.listenmoe.svg /app/share/icons/hicolor/scalable/apps/dev.noobping.listenmoe.svg
-      - install -Dm0644 listenmoe.desktop /app/share/applications/dev.noobping.listenmoe.desktop
+      - install -Dm0644 data/dev.noobping.listenmoe.desktop /app/share/applications/dev.noobping.listenmoe.desktop
+      - install -Dm0644 data/dev.noobping.listenmoe.metainfo.xml /app/share/metainfo/dev.noobping.listenmoe.metainfo.xml
 
     sources:
       - type: git
