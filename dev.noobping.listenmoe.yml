@@ -23,6 +23,7 @@ modules:
       append-path: /usr/lib/sdk/rust-stable/bin
       env:
         CARGO_HOME: /run/build/listenmoe/cargo
+        APP_ID: dev.noobping.listenmoe
 
     build-commands:
       - cargo build --release
@@ -33,7 +34,6 @@ modules:
       - install -d /app/usr/share/icons/hicolor/symbolic/apps
       - install -m644 data/symbolic/apps/* /app/usr/share/icons/hicolor/symbolic/apps/
       - |
-        APP_ID=dev.noobping.listenmoe
         for f in po/*.po; do
           lang=$(basename "$f" .po)
           mkdir -p "/app/share/locale/$lang/LC_MESSAGES"
