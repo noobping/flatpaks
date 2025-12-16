@@ -43,5 +43,5 @@ modules:
 
     sources:
       - type: git
-        url: https://github.com/noobping/listenmoe-gnome-app.git
+        url: https://github.com/noobping/listenmoe.git
         branch: main
