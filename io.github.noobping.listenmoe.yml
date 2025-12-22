@@ -35,14 +35,15 @@ modules:
       - install -Dm0644 data/${FLATPAK_ID}.screenshot.png /app/share/metainfo/${FLATPAK_ID}.screenshot.png
       - install -d /app/share/icons/hicolor/symbolic/apps
       - install -m644 data/symbolic/apps/* /app/share/icons/hicolor/symbolic/apps/
+      - mkdir mo
       - |
         for f in po/*.po; do
           lang=$(basename "$f" .po)
           mkdir -p "/app/share/locale/$lang/LC_MESSAGES"
           msgfmt "$f" -o "/app/share/locale/$lang/LC_MESSAGES/${FLATPAK_ID}.mo"
-          msgfmt "$f" -o "po/.mo/$lang.mo"
+          msgfmt "$f" -o "mo/$lang.mo"
         done
-      - itstool -j data/${FLATPAK_ID}.metainfo.xml.in -o ${FLATPAK_ID}.metainfo.xml po/.mo/*.mo
+      - itstool -j data/${FLATPAK_ID}.metainfo.xml.in -o data/${FLATPAK_ID}.metainfo.xml mo/*.mo
       - install -Dm0644 data/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
 
     sources:
