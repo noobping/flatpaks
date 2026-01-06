@@ -1,3 +1,5 @@
 *.asc
 dist/
 mo/
+.*
+!.gitignore
