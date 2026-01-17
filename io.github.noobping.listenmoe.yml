@@ -32,7 +32,6 @@ modules:
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}.svg
-      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/desktop.in
       - install -Dm0644 data/desktop.in /app/share/applications/${FLATPAK_ID}.desktop
       - install -d /app/share/metainfo
       - install -m644 data/screenshot*.png /app/share/metainfo/
@@ -44,7 +43,6 @@ modules:
           msgfmt "$f" -o "/app/share/locale/$lang/LC_MESSAGES/${FLATPAK_ID}.mo"
           msgfmt "$f" -o "mo/$lang.mo"
         done
-      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/metainfo.xml.in
       - itstool -j data/metainfo.xml.in -o data/${FLATPAK_ID}.metainfo.xml mo/*.mo
       - install -Dm0644 data/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
 
