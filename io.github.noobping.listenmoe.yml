@@ -1,4 +1,4 @@
-id: io.github.noobping.listenmoe.beta
+id: io.github.noobping.listenmoe
 runtime: org.gnome.Platform
 runtime-version: '49'
 sdk: org.gnome.Sdk
@@ -28,12 +28,12 @@ modules:
         CARGO_HOME: /run/build/listenmoe/cargo
 
     build-commands:
-      - cargo build --release --features beta
+      - cargo build --release
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
-      - install -Dm0644 data/symbolic/apps/io.github.noobping.listenmoe-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}-symbolic.svg
-      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/listenmoe.desktop.in
-      - install -Dm0644 data/listenmoe.desktop.in /app/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}.svg
+      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/desktop.in
+      - install -Dm0644 data/desktop.in /app/share/applications/${FLATPAK_ID}.desktop
       - install -d /app/share/metainfo
       - install -m644 data/screenshot*.png /app/share/metainfo/
       - mkdir mo
@@ -51,4 +51,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/noobping/listenmoe.git
-        branch: development
+        branch: main
