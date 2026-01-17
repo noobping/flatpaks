@@ -34,7 +34,7 @@ modules:
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.beta.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.beta.svg
       - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}-symbolic.svg
       - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}.beta-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}.beta-symbolic.svg
-      - install -Dm0644 data/${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm0644 data/${FLATPAK_ID}.beta.desktop /app/share/applications/${FLATPAK_ID}.desktop
       - install -d /app/share/metainfo
       - install -m644 data/screenshot*.png /app/share/metainfo/
       - mkdir mo
