@@ -31,6 +31,7 @@ modules:
       - cargo build --release
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+      - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.develop.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.develop.svg
       - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}-symbolic.svg
       - install -Dm0644 data/${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
       - install -d /app/share/metainfo
