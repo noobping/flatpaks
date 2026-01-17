@@ -1,4 +1,4 @@
-id: io.github.noobping.listenmoe
+id: io.github.noobping.listenmoe.beta
 runtime: org.gnome.Platform
 runtime-version: '49'
 sdk: org.gnome.Sdk
@@ -31,10 +31,9 @@ modules:
       - cargo build --release --features beta
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
-      - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.beta.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.beta.svg
       - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}-symbolic.svg
-      - install -Dm0644 data/symbolic/apps/${FLATPAK_ID}.beta-symbolic.svg /app/share/icons/hicolor/symbolic/apps/${FLATPAK_ID}.beta-symbolic.svg
-      - install -Dm0644 data/${FLATPAK_ID}.beta.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/listenmoe.desktop.in
+      - install -Dm0644 data/listenmoe.desktop.in /app/share/applications/${FLATPAK_ID}.desktop
       - install -d /app/share/metainfo
       - install -m644 data/screenshot*.png /app/share/metainfo/
       - mkdir mo
@@ -45,7 +44,8 @@ modules:
           msgfmt "$f" -o "/app/share/locale/$lang/LC_MESSAGES/${FLATPAK_ID}.mo"
           msgfmt "$f" -o "mo/$lang.mo"
         done
-      - itstool -j data/${FLATPAK_ID}.metainfo.xml.in -o data/${FLATPAK_ID}.metainfo.xml mo/*.mo
+      - sed -i "s|APP_ID|${FLATPAK_ID}|g" data/metainfo.xml.in
+      - itstool -j data/metainfo.xml.in -o data/${FLATPAK_ID}.metainfo.xml mo/*.mo
       - install -Dm0644 data/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
 
     sources:
