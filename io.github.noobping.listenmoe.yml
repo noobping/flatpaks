@@ -28,7 +28,7 @@ modules:
         CARGO_HOME: /run/build/listenmoe/cargo
 
     build-commands:
-      - cargo build --release
+      - cargo build --release --features beta
       - install -Dm0755 target/release/listenmoe /app/bin/listenmoe
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - install -Dm0644 data/scalable/apps/${FLATPAK_ID}.beta.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.beta.svg
@@ -51,4 +51,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/noobping/listenmoe.git
-        branch: main
+        branch: development
